@@ -1,6 +1,11 @@
 'use strict';
 
-var Request = require("request");
+var Request = require('request');
+
+var mongoose = require('mongoose');
+Pesquisas = mongoose.model('Pesquisas');
+
+var moment = require('moment');
 
 const ENDPOINT = 'https://servicodados.ibge.gov.br/api/v3';
 
@@ -20,33 +25,30 @@ const ENDPOINT = 'https://servicodados.ibge.gov.br/api/v3';
 */
 
 /*
-const requestVariaveisIbge = (idPesq, idNivel) => {
+const requestMetadados = (idPesquisa) => {
     return new Promise(function (resolve, reject) {
-        const headerMetadados = {
-            method: 'GET',
-            uri: `${ENDPOINT}/agregados/${idPesq}/variaveis?localidades=${idNivel}`,
-            gzip: true
-        };
-
-        Request.get(headerMetadados, (error, response, body) => {
+        Request.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, (error, response, body) => {
             if (error) {
-                console.dir(headerMetadados.uri + ' - ' + error);
+                console.dir(error);
                 reject(error);
             }
+
+            console.log(body);
+
             resolve(body);
         });
 
     }).catch((err) => {
-        console.dir(headerMetadados.uri + ' - ' + err);
+        console.dir(err);
     });
 }
 
-const asyncRequestVariaveisIbge = async (idPesq, idNivel) => {
-    return await requestVariaveisIbge(idPesq, idNivel);
+const asyncRequestMetadados = async (idPesquisa) => {
+    return await requestMetadados(idPesquisa);
 }
 
-const getData = async (a) => {
-    return await Promise.all(a.map(p => asyncRequestVariaveisIbge(p.idPesq, p.idNivel)));
+const getData = async (pesquisas) => {
+    return await Promise.all(pesquisas.map(p => asyncRequestMetadados(p.id)));
 }
 */
 
@@ -56,78 +58,89 @@ exports.list_all_pesquisas = function (req, res) {
         uri: `${ENDPOINT}/agregados`,
         gzip: true
     };
-    let pesquisas = [];
 
-    Request.get(header, (error, response, body) => {
-        if (error) {
-            console.dir(error);
+    // busca pesquisas na base de dados
+    let lstPesquisas = [];
+    Pesquisas.find({}, function (err, msg) {
+        if (err) {
+            console.dir(err);
+            res.json(err);
         }
 
-        // preciso melhorar essa parte, e verificar se precisa estar dentro deste request mesmo
-        let tmpPesquisas = [];
-        JSON.parse(body).forEach(a => {
-            tmpPesquisas.push(a.agregados);
-        });
-        pesquisas = tmpPesquisas.reduce((acc, it) => [...acc, ...it]);
+        // caso a base esteja vazia, consulta a API, persiste os dados e retorna
+        // a lista de pesquisas, caso negativo, retorna o que vem da base
+        if (msg.length == 0) {
+            console.log('inicia busca na api do IBGE');
+            Request.get(header, (error, response, body) => {
+                if (error) {
+                    console.dir(error);
+                    res.json(error);
+                }
 
-        res.json(pesquisas);
+                // preciso melhorar essa parte, e verificar se precisa estar dentro deste request mesmo
+                let tmpPesquisas = [];
+                JSON.parse(body).forEach(a => {
+                    tmpPesquisas.push(a.agregados);
+                });
+                lstPesquisas = tmpPesquisas.reduce((acc, it) => [...acc, ...it]);
 
+                console.log('inicia insercao na base');
+                Pesquisas.insertMany(lstPesquisas, function (e, d) {
+                    if (e) {
+                        console.log(e);
+                        res.json(e);
+                    }
+                    console.log('envia o que foi persistido na base');
+                    res.json(d);
+                });
+            });
+        } else {
+            console.log('pegando direto da base');
+            res.json(msg);
+        }
     });
 };
 
-exports.get_pesquisa_metadados = function (req, res) {
-    let idPesquisa = req.params.idPesquisa;
-    let header = {
+exports.get_metadados_pesquisa = function (req, res) {
+    const idPesquisa = req.params.idPesquisa;
+    const header = {
         method: 'GET',
+        uri: `${ENDPOINT}/agregados/${idPesquisa}/metadados`,
         gzip: true
     };
 
-    //metadados
-    header.uri = `${ENDPOINT}/agregados/${idPesquisa}/metadados`;
-    Request.get(header, (error, response, body) => {
-        if (error) {
-            console.dir(error);
+    // Procurando na base de dados do mongo a pesquisa
+    Pesquisas.findOne({ id: idPesquisa }, function (err, pesquisa) {
+        if (err) {
+            console.dir(err);
         }
 
-        let tmp = JSON.parse(body);
-        res.json(tmp);
-    });
-}
+        // checa se tem mais de 31 dias sem atualizacao ou se nao ha variaveis no documento
+        if ((moment().diff(pesquisa.dataAtualizacao, 'days') <= 30) || pesquisa.variaveis.length > 0) {
+            console.log('envia o que foi recuperado da base');
+            res.json(pesquisa);
+        } else {
+            console.log('atualizando a pequisa com dados da api do IBGE');
+            Request.get(header, (error, response, body) => {
+                if (error) {
+                    console.dir(error);
+                    res.json(error);
+                }
 
-exports.get_pesquisa_variaveis_estaduais = function (req, res) {
-    let idPesquisa = req.params.idPesquisa;
-    let header = {
-        method: 'GET',
-        gzip: true
-    };
+                let tmp = JSON.parse(body);
+                tmp.dataAtualizacao = Date.now();
 
-    //por unidade federativa
-    header.uri = `${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`;
-    Request.get(header, (error, response, body) => {
-        if (error) {
-            console.dir(error);
+                // atualizando na base os metadados da pesquisa, retornando o documento salvo
+                console.log('inicia atualizacao na base');
+                Pesquisas.findOneAndUpdate({ id: pesquisa.id }, tmp, function (e, d) {
+                    if (e) {
+                        console.dir(e);
+                        res.json(e);
+                    }
+                    console.log('envia o que foi atualizado na base');
+                    res.json(d);
+                });
+            });
         }
-
-        let tmp = JSON.parse(body);
-        res.json(tmp);
     });
-}
-
-exports.get_pesquisa_variaveis_metropolitanas = function (req, res) {
-    let idPesquisa = req.params.idPesquisa;
-    let header = {
-        method: 'GET',
-        gzip: true
-    };
-
-    //por regiao metropolitana
-    header.uri = `${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N7`;
-    Request.get(header, (error, response, body) => {
-        if (error) {
-            console.dir(error);
-        }
-
-        let tmp = JSON.parse(body);
-        res.json(tmp);
-    });
-}
+};

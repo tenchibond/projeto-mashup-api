@@ -1,10 +1,6 @@
 'use strict';
 
-var Request = require('request');
-
-var mongoose = require('mongoose');
-Pesquisas = mongoose.model('Pesquisas');
-
+var Axios = require('axios');
 var moment = require('moment');
 
 const ENDPOINT = 'https://servicodados.ibge.gov.br/api/v3';
@@ -24,123 +20,105 @@ const ENDPOINT = 'https://servicodados.ibge.gov.br/api/v3';
  * 
 */
 
-/*
-const requestMetadados = (idPesquisa) => {
-    return new Promise(function (resolve, reject) {
-        Request.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, (error, response, body) => {
-            if (error) {
-                console.dir(error);
-                reject(error);
-            }
+const handle_axios_error = function (err) {
 
-            console.log(body);
+    if (err.response) {
+        const custom_error = new Error(err.response.statusText || 'Internal server error');
+        custom_error.status = err.response.status || 500;
+        custom_error.description = err.response.data ? err.response.data.message : null;
+        throw custom_error;
+    }
+    throw new Error(err);
 
-            resolve(body);
-        });
+}
 
-    }).catch((err) => {
+Axios.interceptors.response.use(r => r, handle_axios_error);
+
+exports.get_pesquisas = function (req, res) {
+    let config = { 'headers': { 'Content-Encoding': 'gzip' } };
+    try {
+        Axios.get(`${ENDPOINT}/agregados`, config)
+            .then(data => {
+                let pesquisas = [];
+                data.data.forEach(agregado => {
+                    pesquisas.push(...agregado.agregados)
+                });
+                res.status(200).send(pesquisas);
+            })
+            .catch(e => {
+                console.dir(e);
+                res.status(500).send();
+            });
+    } catch (err) {
         console.dir(err);
-    });
-}
-
-const asyncRequestMetadados = async (idPesquisa) => {
-    return await requestMetadados(idPesquisa);
-}
-
-const getData = async (pesquisas) => {
-    return await Promise.all(pesquisas.map(p => asyncRequestMetadados(p.id)));
-}
-*/
-
-exports.list_all_pesquisas = function (req, res) {
-    const header = {
-        method: 'GET',
-        uri: `${ENDPOINT}/agregados`,
-        gzip: true
-    };
-
-    // busca pesquisas na base de dados
-    let lstPesquisas = [];
-    Pesquisas.find({}, function (err, msg) {
-        if (err) {
-            console.dir(err);
-            res.json(err);
-        }
-
-        // caso a base esteja vazia, consulta a API, persiste os dados e retorna
-        // a lista de pesquisas, caso negativo, retorna o que vem da base
-        if (msg.length == 0) {
-            console.log('inicia busca na api do IBGE');
-            Request.get(header, (error, response, body) => {
-                if (error) {
-                    console.dir(error);
-                    res.json(error);
-                }
-
-                // preciso melhorar essa parte, e verificar se precisa estar dentro deste request mesmo
-                let tmpPesquisas = [];
-                JSON.parse(body).forEach(a => {
-                    tmpPesquisas.push(a.agregados);
-                });
-                lstPesquisas = tmpPesquisas.reduce((acc, it) => [...acc, ...it]);
-
-                console.log('inicia insercao na base');
-                Pesquisas.insertMany(lstPesquisas, function (e, d) {
-                    if (e) {
-                        console.log(e);
-                        res.json(e);
-                    }
-                    console.log('envia o que foi persistido na base');
-                    res.json(d);
-                });
-            });
-        } else {
-            console.log('pegando direto da base');
-            res.json(msg);
-        }
-    });
+    }
 };
 
-exports.get_metadados_pesquisa = function (req, res) {
-    const idPesquisa = req.params.idPesquisa;
-    const header = {
-        method: 'GET',
-        uri: `${ENDPOINT}/agregados/${idPesquisa}/metadados`,
-        gzip: true
-    };
 
-    // Procurando na base de dados do mongo a pesquisa
-    Pesquisas.findOne({ id: idPesquisa }, function (err, pesquisa) {
-        if (err) {
-            console.dir(err);
-        }
+exports.get_pesquisa = async function (req, res) {
+    let config = { 'headers': { 'Content-Encoding': 'gzip' } };
+    let idPesquisa = req.params.idPesquisa;
 
-        // checa se tem mais de 31 dias sem atualizacao ou se nao ha variaveis no documento
-        if ((moment().diff(pesquisa.dataAtualizacao, 'days') <= 30) || pesquisa.variaveis.length > 0) {
-            console.log('envia o que foi recuperado da base');
-            res.json(pesquisa);
-        } else {
-            console.log('atualizando a pequisa com dados da api do IBGE');
-            Request.get(header, (error, response, body) => {
-                if (error) {
-                    console.dir(error);
-                    res.json(error);
-                }
+    let pesquisaCompleta = {};
 
-                let tmp = JSON.parse(body);
-                tmp.dataAtualizacao = Date.now();
+    if (idPesquisa == null) {
+        res.status(500).send('Necessario informar um idPesquisa');
+    }
 
-                // atualizando na base os metadados da pesquisa, retornando o documento salvo
-                console.log('inicia atualizacao na base');
-                Pesquisas.findOneAndUpdate({ id: pesquisa.id }, tmp, function (e, d) {
-                    if (e) {
-                        console.dir(e);
-                        res.json(e);
-                    }
-                    console.log('envia o que foi atualizado na base');
-                    res.json(d);
-                });
+    pesquisaCompleta.metadados = await getMetadados(idPesquisa);
+    pesquisaCompleta.variaveis = await getDadosPesquisaNivelEstadual(idPesquisa);
+    //console.log(await getMetadados(idPesquisa));
+    //console.log(await getDadosPesquisaNivelEstadual(idPesquisa));
+    //console.log('Fim dos async');
+
+    res.status(200).send(pesquisaCompleta);
+    /*
+    try {
+        Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, config)
+            .then(data => {
+                let tmp = data.data;
+                delete tmp['nivelTerritorial'];
+                delete tmp['variaveis'];
+                delete tmp['classificacoes'];
+                res.status(200).send(data.data);
+            })
+            .catch(e => {
+                console.dir(e);
+                res.status(500).send();
             });
-        }
-    });
+    } catch(err) {
+        console.dir(err);
+    }
+    */
 };
+
+async function getMetadados(idPesquisa) {
+    try {
+        let config = { 'headers': { 'Content-Encoding': 'gzip' } };
+
+        const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, config)
+            .then(response => {
+                delete response.data['nivelTerritorial'];
+                delete response.data['variaveis'];
+                delete response.data['classificacoes'];
+                return response.data;
+            });
+        return data;
+    } catch (err) {
+        console.dir(err);
+    }
+}
+
+const getDadosPesquisaNivelEstadual = async (idPesquisa) => {
+    try {
+        let config = { 'headers': { 'Content-Encoding': 'gzip' } };
+
+        const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`, config)
+            .then(response => {
+                return response.data
+            });
+        return data;
+    } catch (err) {
+        console.dir(err);
+    }
+}

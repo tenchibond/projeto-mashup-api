@@ -3,7 +3,7 @@ module.exports = function (app) {
     var deputados = require('../controllers/deputadosController');
     // deputados Routes
     app.route('/listarDeputados/:uf')
-        .get(deputados.list_all_deputados);
+        .get(deputados.get_deputados);
     app.route('/deputado/:idDeputado/:idLegislatura')
-        .get(deputados.get_deputado_completo);
+        .get(deputados.get_deputado);
 };

@@ -17,23 +17,26 @@ const ENDPOINT = 'https://dadosabertos.camara.leg.br/api/v2';
  * 
 */
 
-exports.list_all_deputados = function (req, res) {
+exports.get_deputados = function (req, res) {
     let uf = req.params.uf;
 
     Request.get(`${ENDPOINT}/deputados?siglaUf=${uf}&ordem=ASC&ordenarPor=nome`, (error, response, body) => {
         if (error) {
             return console.dir(error);
         }
-        //console.dir(JSON.parse(body));
         let tmp = JSON.parse(body);
+        tmp.dados.forEach(e => {
+            delete e['uri'];
+            delete e['uriPartido'];
+            //e.link = `${ipServidor}/deputado/${e.id}/${e.idLegislatura}`; 
+        });
         res.json(tmp.dados);
     });
 };
 
-exports.get_deputado_completo = function (req, res) {
+exports.get_deputado = function (req, res) {
     let idDeputado = req.params.idDeputado;
     let idLegislatura = req.params.idLegislatura;
-
     let deputadoDetalhado = [];
 
     Request.get(`${ENDPOINT}/deputados/${idDeputado}`, (error, response, body) => {

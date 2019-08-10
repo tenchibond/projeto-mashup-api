@@ -67,29 +67,9 @@ exports.get_pesquisa = async function (req, res) {
 
     pesquisaCompleta.metadados = await getMetadados(idPesquisa);
     pesquisaCompleta.variaveis = await getDadosPesquisaNivelEstadual(idPesquisa);
-    //console.log(await getMetadados(idPesquisa));
-    //console.log(await getDadosPesquisaNivelEstadual(idPesquisa));
-    //console.log('Fim dos async');
 
     res.status(200).send(pesquisaCompleta);
-    /*
-    try {
-        Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, config)
-            .then(data => {
-                let tmp = data.data;
-                delete tmp['nivelTerritorial'];
-                delete tmp['variaveis'];
-                delete tmp['classificacoes'];
-                res.status(200).send(data.data);
-            })
-            .catch(e => {
-                console.dir(e);
-                res.status(500).send();
-            });
-    } catch(err) {
-        console.dir(err);
-    }
-    */
+    
 };
 
 async function getMetadados(idPesquisa) {

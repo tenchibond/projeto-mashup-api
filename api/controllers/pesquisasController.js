@@ -96,7 +96,19 @@ async function getDadosPesquisaNivelEstadual(idPesquisa) {
 
         const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`, config)
             .then(response => {
-                return response.data
+                let tmp = response.data.map(variavel => {
+                    let x = {};
+                    x.id = variavel.id;
+                    x.variavel = variavel.variavel;
+                    x.unidade = variavel.unidade;
+                    x.series = variavel.resultados
+                                .map(r => r.series)
+                                .reduce((a, b) => {
+                                    return a.concat(b);
+                                });
+                    return x;
+                });
+                return tmp;
             });
         return data;
     } catch (err) {

@@ -1,0 +1,333 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "0.0.1",
+    "title": "API de Mashup Camara/IBGE",
+    "description": "API de Mashup Camara/IBGE, como trabalho de finalização do curso de Sistemas de Informação - IFMA/Monte Castelo",
+    "termsOfService": "",
+    "contact": {
+      "name": "Victor de Lima Alves",
+      "email": "tenchibond@yahoo.com.br"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    }
+  },
+  "schemes": [
+    "http"
+  ],
+  "host": "localhost:3000",
+  "paths": {
+    "/listarDeputados/{UF}": {
+      "get": {
+        "summary": "Retorna a lista de deputados, por UF fornecida",
+        "description": "Retorna a lista de deputados, por UF fornecida",
+        "parameters": [
+          {
+            "name": "UF",
+            "in": "path",
+            "required": true,
+            "description": "Sigla da UF a ser pesquisada",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "id": {
+                    "type": "number"
+                  },
+                  "nome": {
+                    "type": "string"
+                  },
+                  "siglaPartido": {
+                    "type": "string"
+                  },
+                  "siglaUf": {
+                    "type": "string"
+                  },
+                  "idLegislatura": {
+                    "type": "number"
+                  },
+                  "urlFoto": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deputado/{idDeputado}/{idLegislatura}": {
+      "get": {
+        "summary": "Retorna os dados completos do deputado",
+        "description": "Retorna os dados completos do deputado, incluindo a lista de palavras-chave dos disurcursos, seu ranking",
+        "parameters": [
+          {
+            "name": "idDeputado",
+            "in": "path",
+            "required": true,
+            "description": "ID do Deputado fornecida pela API",
+            "type": "number"
+          },
+          {
+            "name": "idLegislatura",
+            "in": "path",
+            "required": true,
+            "description": "ID da Legislatura do Deputado, fornecida pela API",
+            "type": "number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "id": {
+                    "type": "number"
+                  },
+                  "uri": {
+                    "type": "string"
+                  },
+                  "nomeCivil": {
+                    "type": "string"
+                  },
+                  "ultimoStatus": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number"
+                      },
+                      "uri": {
+                        "type": "string"
+                      },
+                      "nome": {
+                        "type": "string"
+                      },
+                      "siglaPartido": {
+                        "type": "string"
+                      },
+                      "idLegislatura": {
+                        "type": "number"
+                      },
+                      "urlFoto": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "data": {
+                        "type": "string"
+                      },
+                      "nomeEleitoral": {
+                        "type": "string"
+                      },
+                      "gabinete": {
+                        "type": "object",
+                        "properties": {
+                          "nome": {
+                            "type": "number"
+                          },
+                          "predio": {
+                            "type": "number"
+                          },
+                          "sala": {
+                            "type": "number"
+                          },
+                          "andar": {
+                            "type": "number"
+                          },
+                          "telefone": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "situacao": {
+                        "type": "string"
+                      },
+                      "condicaoEleitoral": {
+                        "type": "string"
+                      },
+                      "descricaoStatus": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "cpf": {
+                    "type": "string"
+                  },
+                  "sexo": {
+                    "type": "string"
+                  },
+                  "urlWebsite": {
+                    "type": "string"
+                  },
+                  "redeSocial": {
+                    "type": "object"
+                  },
+                  "dataNascimento": {
+                    "type": "string"
+                  },
+                  "dataFalecimento": {
+                    "type": "string"
+                  },
+                  "ufNascimento": {
+                    "type": "string"
+                  },
+                  "municipioNascimento": {
+                    "type": "string"
+                  },
+                  "escolaridade": {
+                    "type": "string"
+                  },
+                  "dados": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listarPesquisas": {
+      "get": {
+        "summary": "Retorna a lista de pesquisas disponíveis",
+        "description": "Retorna a lista de pesquisas disponíveis, de acordo com a API do Ibge",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "id": {
+                    "type": "number"
+                  },
+                  "nome": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pesquisa/{idPesquisa}": {
+      "get": {
+        "summary": "Retorna a pesquisa completa",
+        "description": "Retorna a pesquisa completa, com metadados e variaveis, em nível Estadual, conforme API do Ibge",
+        "parameters": [
+          {
+            "name": "idPesquisa",
+            "in": "path",
+            "required": true,
+            "description": "ID da pesquisa fornecida pela API",
+            "type": "number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "metadados": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number"
+                      },
+                      "nome": {
+                        "type": "string"
+                      },
+                      "URL": {
+                        "type": "string"
+                      },
+                      "pesquisa": {
+                        "type": "string"
+                      },
+                      "assunto": {
+                        "type": "string"
+                      },
+                      "periodicidade": {
+                        "type": "object",
+                        "properties": {
+                          "frequencia": {
+                            "type": "string"
+                          },
+                          "inicio": {
+                            "type": "number"
+                          },
+                          "fim": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "variaveis": {
+                    "type": "array",
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "variavel": {
+                          "type": "string"
+                        },
+                        "unidade": {
+                          "type": "string"
+                        },
+                        "series": {
+                          "type": "array",
+                          "items": {
+                            "properties": {
+                              "localidade": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "number"
+                                  },
+                                  "nivel": {
+                                    "type": "string"
+                                  },
+                                  "nome": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "serie": {
+                                "type": "object"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

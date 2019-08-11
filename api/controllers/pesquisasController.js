@@ -20,6 +20,7 @@ const ENDPOINT = 'https://servicodados.ibge.gov.br/api/v3';
  * 
 */
 
+/*
 const handle_axios_error = function (err) {
 
     if (err.response) {
@@ -31,8 +32,8 @@ const handle_axios_error = function (err) {
     throw new Error(err);
 
 }
-
 Axios.interceptors.response.use(r => r, handle_axios_error);
+*/
 
 exports.get_pesquisas = function (req, res) {
     let config = { 'headers': { 'Content-Encoding': 'gzip' } };

@@ -18,6 +18,7 @@ const ENDPOINT = 'https://dadosabertos.camara.leg.br/api/v2';
  * 
 */
 
+/*
 const handle_axios_error = function (err) {
 
     if (err.response) {
@@ -29,8 +30,8 @@ const handle_axios_error = function (err) {
     throw new Error(err);
 
 }
-
 Axios.interceptors.response.use(r => r, handle_axios_error);
+*/
 
 exports.get_deputados = function (req, res) {
     let uf = req.params.uf;

@@ -89,7 +89,7 @@ async function getMetadados(idPesquisa) {
     }
 }
 
-const getDadosPesquisaNivelEstadual = async (idPesquisa) => {
+async function getDadosPesquisaNivelEstadual(idPesquisa) {
     try {
         let config = { 'headers': { 'Content-Encoding': 'gzip' } };
 

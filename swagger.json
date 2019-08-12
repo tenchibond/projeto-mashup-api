@@ -17,7 +17,7 @@
   "schemes": [
     "http"
   ],
-  "host": "localhost:3000",
+  
   "paths": {
     "/listarDeputados/{UF}": {
       "get": {

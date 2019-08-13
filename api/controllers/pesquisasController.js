@@ -37,22 +37,26 @@ Axios.interceptors.response.use(r => r, handle_axios_error);
 
 exports.get_pesquisas = function (req, res) {
     let config = { 'headers': { 'Content-Encoding': 'gzip' } };
-    try {
-        Axios.get(`${ENDPOINT}/agregados`, config)
-            .then(data => {
-                let pesquisas = [];
-                data.data.forEach(agregado => {
-                    pesquisas.push(...agregado.agregados)
-                });
-                res.status(200).send(pesquisas);
-            })
-            .catch(e => {
-                console.dir(e);
-                res.status(500).send();
+
+    Axios.get(`${ENDPOINT}/agregados`, config)
+        .then(data => {
+            let pesquisas = [];
+            data.data.forEach(agregado => {
+                pesquisas.push(...agregado.agregados)
             });
+            res.status(200).send(pesquisas);
+        })
+        .catch(e => {
+            res.status(500).send({ code: 500, message: e.message });
+        });
+
+    /*
+    try {
+        
     } catch (err) {
         console.dir(err);
     }
+    */
 };
 
 
@@ -69,49 +73,66 @@ exports.get_pesquisa = async function (req, res) {
     pesquisaCompleta.metadados = await getMetadados(idPesquisa);
     pesquisaCompleta.variaveis = await getDadosPesquisaNivelEstadual(idPesquisa);
 
+    if (pesquisaCompleta.metadados.error || pesquisaCompleta.variaveis.error) {
+        res.status(500).send({ code: 500, message: `Erro ao processar API IBGE` });
+    }
+
     res.status(200).send(pesquisaCompleta);
-    
+
 };
 
 async function getMetadados(idPesquisa) {
-    try {
-        let config = { 'headers': { 'Content-Encoding': 'gzip' } };
+    let config = { 'headers': { 'Content-Encoding': 'gzip' } };
 
-        const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, config)
-            .then(response => {
-                delete response.data['nivelTerritorial'];
-                delete response.data['variaveis'];
-                delete response.data['classificacoes'];
-                return response.data;
-            });
-        return data;
+    const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, config)
+        .then(response => {
+            delete response.data['nivelTerritorial'];
+            delete response.data['variaveis'];
+            delete response.data['classificacoes'];
+            return response.data;
+        })
+        .catch(e => {
+            return ({ error: true, message: e.message });
+        });
+    return data;
+    /*    
+    try {
+        
     } catch (err) {
         console.dir(err);
     }
+    */
 }
 
 async function getDadosPesquisaNivelEstadual(idPesquisa) {
-    try {
-        let config = { 'headers': { 'Content-Encoding': 'gzip' } };
+    let config = { 'headers': { 'Content-Encoding': 'gzip' } };
 
-        const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`, config)
-            .then(response => {
-                let tmp = response.data.map(variavel => {
-                    let x = {};
-                    x.id = variavel.id;
-                    x.variavel = variavel.variavel;
-                    x.unidade = variavel.unidade;
-                    x.series = variavel.resultados
-                                .map(r => r.series)
-                                .reduce((a, b) => {
-                                    return a.concat(b);
-                                });
-                    return x;
-                });
-                return tmp;
+    const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`, config)
+        .then(response => {
+            let tmp = response.data.map(variavel => {
+                let x = {};
+                x.id = variavel.id;
+                x.variavel = variavel.variavel;
+                x.unidade = variavel.unidade;
+                x.series = variavel.resultados
+                    .map(r => r.series)
+                    .reduce((a, b) => {
+                        return a.concat(b);
+                    });
+                return x;
             });
-        return data;
+            return tmp;
+        })
+        .catch(e => {
+            return ({ error: true, message: e.message });
+        });;
+    return data;
+
+    /*
+    try {
+        
     } catch (err) {
         console.dir(err);
     }
+    */
 }

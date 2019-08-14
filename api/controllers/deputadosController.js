@@ -51,7 +51,7 @@ exports.get_deputados = function (req, res) {
             }
         })
         .catch(e => {
-            console.dir(e);
+            console.dir(`get_deputados | ${e.code} - ${e.message}`);
             res.status(500).send({ code: e.code, message: 'Erro ao processar API Camara: lista dos deputados' });
         });
 };
@@ -80,7 +80,7 @@ async function getDeputadoDetalhado(idDeputado) {
             return response.data.dados;
         })
         .catch(e => {
-            //console.dir(e);
+            console.dir(`getDeputadoDetalhado | ${e.code} - ${e.message}`);
             return ({ error: true, message: e.message });
         });
     return data;
@@ -118,7 +118,7 @@ async function getDeputadoDiscursos(idDeputado, idLegislatura) {
             return dados;
         })
         .catch(e => {
-            //console.dir(e);
+            console.dir(`getDeputadoDiscursos | ${e.code} - ${e.message}`);
             return ({ error: true, message: e.message });
         });
     return data;

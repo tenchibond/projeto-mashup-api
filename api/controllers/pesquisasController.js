@@ -35,28 +35,44 @@ const handle_axios_error = function (err) {
 Axios.interceptors.response.use(r => r, handle_axios_error);
 */
 
-exports.get_pesquisas = function (req, res) {
+exports.get_pesquisas = async(req, res) => {
     let config = { 'headers': { 'Content-Encoding': 'gzip' } };
+    try {
+        const req = await Axios.get(`${ENDPOINT}/agregados`, config);
+        const pesquisas = new Array();
+        const loop = await req.data.map(async(agregado)=> {
+            pesquisas.push(...agregado.agregados);
+            console.log(`inseriu loop`);
+        });
+        await Promise.all(loop);
+        console.log('resolveu promisse');
+        res.status(200).send(pesquisas);
 
-    Axios.get(`${ENDPOINT}/agregados`, config)
+    } catch (error){
+        console.log(error);
+        res.status(500).send({ code: 500, message: e.message });
+    }
+    /*Axios.get(`${ENDPOINT}/agregados`, config)
         .then(data => {
             let pesquisas = [];
             data.data.forEach(agregado => {
                 pesquisas.push(...agregado.agregados)
             });
+
+            const getPesquisaDoAgregado = (a) => {
+                return new Promise((resolve, reject) => { resolve(a.agregados) }, a);
+            };
+            const agregados = await data.data.map(async (agregado) => {
+                pesquisas.push(await getPesquisaDoAgregado(agregado));
+            });
+            await Promise.all(agregados);
+
             res.status(200).send(pesquisas);
         })
         .catch(e => {
+            console.dir(e);
             res.status(500).send({ code: 500, message: e.message });
-        });
-
-    /*
-    try {
-        
-    } catch (err) {
-        console.dir(err);
-    }
-    */
+        });*/
 };
 
 
@@ -92,16 +108,10 @@ async function getMetadados(idPesquisa) {
             return response.data;
         })
         .catch(e => {
+            console.dir(e);
             return ({ error: true, message: e.message });
         });
     return data;
-    /*    
-    try {
-        
-    } catch (err) {
-        console.dir(err);
-    }
-    */
 }
 
 async function getDadosPesquisaNivelEstadual(idPesquisa) {
@@ -124,15 +134,8 @@ async function getDadosPesquisaNivelEstadual(idPesquisa) {
             return tmp;
         })
         .catch(e => {
+            console.dir(e);
             return ({ error: true, message: e.message });
         });;
     return data;
-
-    /*
-    try {
-        
-    } catch (err) {
-        console.dir(err);
-    }
-    */
 }

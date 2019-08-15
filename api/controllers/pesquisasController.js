@@ -35,12 +35,22 @@ const handle_axios_error = function (err) {
 Axios.interceptors.response.use(r => r, handle_axios_error);
 */
 
-exports.get_pesquisas = async(req, res) => {
-    let config = { 'headers': { 'Content-Encoding': 'gzip' } };
+const headerConfig = {
+    'headers': { 'Content-Encoding': 'gzip' },
+    'proxy': { 'host': '177.206.187.171', 'port': '8080' }
+};
+
+/*const headerConfig = {
+    'headers': { 'Content-Encoding': 'gzip' }
+};*/
+
+exports.get_pesquisas = async (req, res) => {
     try {
-        const req = await Axios.get(`${ENDPOINT}/agregados`, config);
+        console.log('iniciando request');
+        const req = await Axios.get(`${ENDPOINT}/agregados`, headerConfig);
         const pesquisas = new Array();
-        const loop = await req.data.map(async(agregado)=> {
+        console.log('iniciando loop');
+        const loop = await req.data.map(async (agregado) => {
             pesquisas.push(...agregado.agregados);
             console.log(`inseriu loop`);
         });
@@ -48,36 +58,14 @@ exports.get_pesquisas = async(req, res) => {
         console.log('resolveu promisse');
         res.status(200).send(pesquisas);
 
-    } catch (error){
+    } catch (error) {
         console.log(error);
-        res.status(500).send({ code: 500, message: e.message });
+        res.status(500).send({ code: 500, message: error.Error });
     }
-    /*Axios.get(`${ENDPOINT}/agregados`, config)
-        .then(data => {
-            let pesquisas = [];
-            data.data.forEach(agregado => {
-                pesquisas.push(...agregado.agregados)
-            });
-
-            const getPesquisaDoAgregado = (a) => {
-                return new Promise((resolve, reject) => { resolve(a.agregados) }, a);
-            };
-            const agregados = await data.data.map(async (agregado) => {
-                pesquisas.push(await getPesquisaDoAgregado(agregado));
-            });
-            await Promise.all(agregados);
-
-            res.status(200).send(pesquisas);
-        })
-        .catch(e => {
-            console.dir(e);
-            res.status(500).send({ code: 500, message: e.message });
-        });*/
 };
 
 
 exports.get_pesquisa = async function (req, res) {
-    let config = { 'headers': { 'Content-Encoding': 'gzip' } };
     let idPesquisa = req.params.idPesquisa;
 
     let pesquisaCompleta = {};
@@ -91,16 +79,25 @@ exports.get_pesquisa = async function (req, res) {
 
     if (pesquisaCompleta.metadados.error || pesquisaCompleta.variaveis.error) {
         res.status(500).send({ code: 500, message: `Erro ao processar API IBGE` });
+    } else {
+        res.status(200).send(pesquisaCompleta);
     }
-
-    res.status(200).send(pesquisaCompleta);
-
 };
 
 async function getMetadados(idPesquisa) {
-    let config = { 'headers': { 'Content-Encoding': 'gzip' } };
+    try {
+        const response = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, headerConfig);
+        delete response.data['nivelTerritorial'];
+        delete response.data['variaveis'];
+        delete response.data['classificacoes'];
+        return response.data;
 
-    const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, config)
+    } catch (error) {
+        console.log(error);
+        return ({ error: true, message: error.Error });
+    }
+    /*
+    const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, headerConfig)
         .then(response => {
             delete response.data['nivelTerritorial'];
             delete response.data['variaveis'];
@@ -112,12 +109,32 @@ async function getMetadados(idPesquisa) {
             return ({ error: true, message: e.message });
         });
     return data;
+    */
 }
 
 async function getDadosPesquisaNivelEstadual(idPesquisa) {
-    let config = { 'headers': { 'Content-Encoding': 'gzip' } };
+    try {
+        const response = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`, headerConfig);
+        let tmp = response.data.map(variavel => {
+            let x = {};
+            x.id = variavel.id;
+            x.variavel = variavel.variavel;
+            x.unidade = variavel.unidade;
+            x.series = variavel.resultados
+                .map(r => r.series)
+                .reduce((a, b) => {
+                    return a.concat(b);
+                });
+            return x;
+        });
+        return tmp;
 
-    const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`, config)
+    } catch (error) {
+        console.log(error);
+        return ({ error: true, message: error.Error });
+    }
+    /*
+    const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`, headerConfig)
         .then(response => {
             let tmp = response.data.map(variavel => {
                 let x = {};
@@ -138,4 +155,5 @@ async function getDadosPesquisaNivelEstadual(idPesquisa) {
             return ({ error: true, message: e.message });
         });;
     return data;
+    */
 }

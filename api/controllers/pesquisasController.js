@@ -1,7 +1,7 @@
 'use strict';
 
 var Axios = require('axios');
-var moment = require('moment');
+//var moment = require('moment');
 
 const ENDPOINT = 'https://servicodados.ibge.gov.br/api/v3';
 
@@ -35,14 +35,16 @@ const handle_axios_error = function (err) {
 Axios.interceptors.response.use(r => r, handle_axios_error);
 */
 
+/*
 const headerConfig = {
     'headers': { 'Content-Encoding': 'gzip' },
     'proxy': { 'host': '177.206.187.171', 'port': '8080' }
 };
+*/
 
-/*const headerConfig = {
+const headerConfig = {
     'headers': { 'Content-Encoding': 'gzip' }
-};*/
+};
 
 exports.get_pesquisas = async (req, res) => {
     try {
@@ -52,8 +54,9 @@ exports.get_pesquisas = async (req, res) => {
         console.log('iniciando loop');
         const loop = await req.data.map(async (agregado) => {
             pesquisas.push(...agregado.agregados);
-            console.log(`inseriu loop`);
+            //console.log(`inseriu loop`);
         });
+        console.log('finalizou loop');
         await Promise.all(loop);
         console.log('resolveu promisse');
         res.status(200).send(pesquisas);
@@ -77,43 +80,35 @@ exports.get_pesquisa = async function (req, res) {
     pesquisaCompleta.metadados = await getMetadados(idPesquisa);
     pesquisaCompleta.variaveis = await getDadosPesquisaNivelEstadual(idPesquisa);
 
-    if (pesquisaCompleta.metadados.error || pesquisaCompleta.variaveis.error) {
+    res.status(200).send(pesquisaCompleta);
+    /*
+    if (pesquisaCompleta.metadados.erro == true && pesquisaCompleta.variaveis.erro == true) {
         res.status(500).send({ code: 500, message: `Erro ao processar API IBGE` });
     } else {
         res.status(200).send(pesquisaCompleta);
     }
+    */
 };
 
 async function getMetadados(idPesquisa) {
     try {
+        console.log('iniciando request de metadados');
         const response = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, headerConfig);
         delete response.data['nivelTerritorial'];
         delete response.data['variaveis'];
         delete response.data['classificacoes'];
+        console.log('enviando request de metadados');
         return response.data;
 
     } catch (error) {
         console.log(error);
-        return ({ error: true, message: error.Error });
+        return (error);
     }
-    /*
-    const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, headerConfig)
-        .then(response => {
-            delete response.data['nivelTerritorial'];
-            delete response.data['variaveis'];
-            delete response.data['classificacoes'];
-            return response.data;
-        })
-        .catch(e => {
-            console.dir(e);
-            return ({ error: true, message: e.message });
-        });
-    return data;
-    */
 }
 
 async function getDadosPesquisaNivelEstadual(idPesquisa) {
     try {
+        console.log('iniciando request de pesquisas');
         const response = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`, headerConfig);
         let tmp = response.data.map(variavel => {
             let x = {};
@@ -127,33 +122,11 @@ async function getDadosPesquisaNivelEstadual(idPesquisa) {
                 });
             return x;
         });
+        console.log('enviando request de pesquisas');
         return tmp;
 
     } catch (error) {
         console.log(error);
-        return ({ error: true, message: error.Error });
+        return (error);
     }
-    /*
-    const data = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`, headerConfig)
-        .then(response => {
-            let tmp = response.data.map(variavel => {
-                let x = {};
-                x.id = variavel.id;
-                x.variavel = variavel.variavel;
-                x.unidade = variavel.unidade;
-                x.series = variavel.resultados
-                    .map(r => r.series)
-                    .reduce((a, b) => {
-                        return a.concat(b);
-                    });
-                return x;
-            });
-            return tmp;
-        })
-        .catch(e => {
-            console.dir(e);
-            return ({ error: true, message: e.message });
-        });;
-    return data;
-    */
 }

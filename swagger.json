@@ -91,112 +91,110 @@
           "200": {
             "description": "OK",
             "schema": {
-              "type": "array",
-              "items": {
-                "properties": {
-                  "id": {
-                    "type": "number"
-                  },
-                  "uri": {
-                    "type": "string"
-                  },
-                  "nomeCivil": {
-                    "type": "string"
-                  },
-                  "ultimoStatus": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "number"
-                      },
-                      "uri": {
-                        "type": "string"
-                      },
-                      "nome": {
-                        "type": "string"
-                      },
-                      "siglaPartido": {
-                        "type": "string"
-                      },
-                      "idLegislatura": {
-                        "type": "number"
-                      },
-                      "urlFoto": {
-                        "type": "string"
-                      },
-                      "email": {
-                        "type": "string"
-                      },
-                      "data": {
-                        "type": "string"
-                      },
-                      "nomeEleitoral": {
-                        "type": "string"
-                      },
-                      "gabinete": {
-                        "type": "object",
-                        "properties": {
-                          "nome": {
-                            "type": "number"
-                          },
-                          "predio": {
-                            "type": "number"
-                          },
-                          "sala": {
-                            "type": "number"
-                          },
-                          "andar": {
-                            "type": "number"
-                          },
-                          "telefone": {
-                            "type": "string"
-                          },
-                          "email": {
-                            "type": "string"
-                          }
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "uri": {
+                  "type": "string"
+                },
+                "nomeCivil": {
+                  "type": "string"
+                },
+                "ultimoStatus": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number"
+                    },
+                    "uri": {
+                      "type": "string"
+                    },
+                    "nome": {
+                      "type": "string"
+                    },
+                    "siglaPartido": {
+                      "type": "string"
+                    },
+                    "idLegislatura": {
+                      "type": "number"
+                    },
+                    "urlFoto": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "string"
+                    },
+                    "nomeEleitoral": {
+                      "type": "string"
+                    },
+                    "gabinete": {
+                      "type": "object",
+                      "properties": {
+                        "nome": {
+                          "type": "number"
+                        },
+                        "predio": {
+                          "type": "number"
+                        },
+                        "sala": {
+                          "type": "number"
+                        },
+                        "andar": {
+                          "type": "number"
+                        },
+                        "telefone": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
                         }
-                      },
-                      "situacao": {
-                        "type": "string"
-                      },
-                      "condicaoEleitoral": {
-                        "type": "string"
-                      },
-                      "descricaoStatus": {
-                        "type": "string"
                       }
+                    },
+                    "situacao": {
+                      "type": "string"
+                    },
+                    "condicaoEleitoral": {
+                      "type": "string"
+                    },
+                    "descricaoStatus": {
+                      "type": "string"
                     }
-                  },
-                  "cpf": {
-                    "type": "string"
-                  },
-                  "sexo": {
-                    "type": "string"
-                  },
-                  "urlWebsite": {
-                    "type": "string"
-                  },
-                  "redeSocial": {
-                    "type": "object"
-                  },
-                  "dataNascimento": {
-                    "type": "string"
-                  },
-                  "dataFalecimento": {
-                    "type": "string"
-                  },
-                  "ufNascimento": {
-                    "type": "string"
-                  },
-                  "municipioNascimento": {
-                    "type": "string"
-                  },
-                  "escolaridade": {
-                    "type": "string"
-                  },
-                  "dados": {
-                    "type": "object"
                   }
+                },
+                "cpf": {
+                  "type": "string"
+                },
+                "sexo": {
+                  "type": "string"
+                },
+                "urlWebsite": {
+                  "type": "string"
+                },
+                "redeSocial": {
+                  "type": "object"
+                },
+                "dataNascimento": {
+                  "type": "string"
+                },
+                "dataFalecimento": {
+                  "type": "string"
+                },
+                "ufNascimento": {
+                  "type": "string"
+                },
+                "municipioNascimento": {
+                  "type": "string"
+                },
+                "escolaridade": {
+                  "type": "string"
+                },
+                "dados": {
+                  "type": "object"
                 }
               }
             }
@@ -245,77 +243,75 @@
           "200": {
             "description": "OK",
             "schema": {
-              "type": "array",
-              "items": {
-                "properties": {
-                  "metadados": {
-                    "type": "object",
+              "type": "object",
+              "properties": {
+                "metadados": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number"
+                    },
+                    "nome": {
+                      "type": "string"
+                    },
+                    "URL": {
+                      "type": "string"
+                    },
+                    "pesquisa": {
+                      "type": "string"
+                    },
+                    "assunto": {
+                      "type": "string"
+                    },
+                    "periodicidade": {
+                      "type": "object",
+                      "properties": {
+                        "frequencia": {
+                          "type": "string"
+                        },
+                        "inicio": {
+                          "type": "number"
+                        },
+                        "fim": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                },
+                "variaveis": {
+                  "type": "array",
+                  "items": {
                     "properties": {
                       "id": {
                         "type": "number"
                       },
-                      "nome": {
+                      "variavel": {
                         "type": "string"
                       },
-                      "URL": {
+                      "unidade": {
                         "type": "string"
                       },
-                      "pesquisa": {
-                        "type": "string"
-                      },
-                      "assunto": {
-                        "type": "string"
-                      },
-                      "periodicidade": {
-                        "type": "object",
-                        "properties": {
-                          "frequencia": {
-                            "type": "string"
-                          },
-                          "inicio": {
-                            "type": "number"
-                          },
-                          "fim": {
-                            "type": "number"
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "variaveis": {
-                    "type": "array",
-                    "items": {
-                      "properties": {
-                        "id": {
-                          "type": "number"
-                        },
-                        "variavel": {
-                          "type": "string"
-                        },
-                        "unidade": {
-                          "type": "string"
-                        },
-                        "series": {
-                          "type": "array",
-                          "items": {
-                            "properties": {
-                              "localidade": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "number"
-                                  },
-                                  "nivel": {
-                                    "type": "string"
-                                  },
-                                  "nome": {
-                                    "type": "string"
-                                  }
+                      "series": {
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "localidade": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "number"
+                                },
+                                "nivel": {
+                                  "type": "string"
+                                },
+                                "nome": {
+                                  "type": "string"
                                 }
-                              },
-                              "serie": {
-                                "type": "object"
                               }
+                            },
+                            "serie": {
+                              "type": "object"
                             }
                           }
                         }

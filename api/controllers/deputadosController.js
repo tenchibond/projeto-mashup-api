@@ -3,6 +3,8 @@
 var Request = require("request");
 var Axios = require('axios');
 
+var pesquisaController = require('./pesquisasController.js');
+
 const ENDPOINT = 'https://dadosabertos.camara.leg.br/api/v2';
 
 /**
@@ -64,34 +66,79 @@ exports.get_deputado = async function (req, res) {
     deputadoDetalhado = await getDeputadoDetalhado(idDeputado);
     deputadoDetalhado.dados = await getDeputadoDiscursos(idDeputado, idLegislatura);
 
-    if (deputadoDetalhado.error || deputadoDetalhado.dados.error) {
-        let message = 'dados deputado => ' + (deputadoDetalhado.error ? deputadoDetalhado.message : ' OK');
-        let messageFinal = message.concat(' | discursos => ' + (deputadoDetalhado.dados.error ? deputadoDetalhado.dados.message : ' OK'));
-        console.log(deputadoDetalhado);
-        res.status(500).send({ code: 500, message: `Erro ao processar API Camara: ${messageFinal}` });
+    if (deputadoDetalhado.erro || deputadoDetalhado.dados.erro) {
+        res.status(500).send('Erro ao processar API Camara, contate o desenvolvedor da API');
     }
 
     res.status(200).send(deputadoDetalhado);
 };
 
+exports.get_pesquisas_por_discursos = async function (req, res) {
+    let idDeputado = req.params.idDeputado;
+    let idLegislatura = req.params.idLegislatura;
+
+    let response = {};
+    response.discursos = await getDeputadoDiscursos(idDeputado, idLegislatura);
+
+    let tmpPesquisasCompleto = await pesquisaController.get_lista_pesquisas_base_ibge();
+    const tmpPesquisasResponse = new Array();
+
+    /*
+        console.log('iniciando request');
+        const req = await Axios.get(`${ENDPOINT}/agregados`, headerConfig);
+        const pesquisas = new Array();
+        console.log('iniciando loop');
+        const loop = await req.data.map(async (agregado) => {
+            pesquisas.push(...agregado.agregados);
+            //console.log(`inseriu loop`);
+        });
+        console.log('finalizou loop');
+        await Promise.all(loop);
+        console.log('resolveu promisse');
+        */
+
+    try {
+        if (response.discursos !== {} && response.discursos.lstKeywords != null) {
+            console.log('aqui');
+            const loop = await tmpPesquisasCompleto.map(async (pesquisa) => {
+                let tmpNomePesquisa = pesquisa.nome.toUpperCase();
+                response.discursos.lstKeywords.forEach(k => {
+                    if (tmpNomePesquisa.includes(k)) {
+                        // console.log(pesquisa);
+                        tmpPesquisasCompleto.push(pesquisa);
+                    }
+                });
+            });
+            await Promise.all(loop);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+
+    response.pesquisas = tmpPesquisasResponse;
+
+    res.status(200).send(response);
+}
+
 async function getDeputadoDetalhado(idDeputado) {
+    console.log('iniciando request de deputados API Camara');
     const data = await Axios.get(`${ENDPOINT}/deputados/${idDeputado}`)
         .then(response => {
             return response.data.dados;
         })
         .catch(e => {
-            console.dir(`getDeputadoDetalhado | ${e.code} - ${e.message}`);
-            return ({ error: true, message: e.message });
+            console.dir(e);
+            return ({ erro: true, mensagem: e });
         });
     return data;
 }
 
 async function getDeputadoDiscursos(idDeputado, idLegislatura) {
-
+    console.log('iniciando request de discursos API Camara');
     const data = await Axios.get(`${ENDPOINT}/deputados/${idDeputado}/discursos?idLegislatura=${idLegislatura}&ordenarPor=dataHoraInicio&ordem=ASC`)
         .then(response => {
             if (response.data.dados == null || response.data.dados.length == 0) {
-                return 'Nao ha discursos para este deputado';
+                return {};
             }
 
             let dados = {};
@@ -118,8 +165,8 @@ async function getDeputadoDiscursos(idDeputado, idLegislatura) {
             return dados;
         })
         .catch(e => {
-            console.dir(`getDeputadoDiscursos | ${e.code} - ${e.message}`);
-            return ({ error: true, message: e.message });
+            console.dir(e);
+            return ({ erro: true, mensagem: e });
         });
     return data;
 }

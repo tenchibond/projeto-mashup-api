@@ -1,7 +1,7 @@
 'use strict';
 
 var Axios = require('axios');
-//var moment = require('moment');
+// var moment = require('moment');
 
 const ENDPOINT = 'https://servicodados.ibge.gov.br/api/v3';
 
@@ -20,27 +20,7 @@ const ENDPOINT = 'https://servicodados.ibge.gov.br/api/v3';
  * 
 */
 
-/*
-const handle_axios_error = function (err) {
-
-    if (err.response) {
-        const custom_error = new Error(err.response.statusText || 'Internal server error');
-        custom_error.status = err.response.status || 500;
-        custom_error.description = err.response.data ? err.response.data.message : null;
-        throw custom_error;
-    }
-    throw new Error(err);
-
-}
-Axios.interceptors.response.use(r => r, handle_axios_error);
-*/
-
-/*
-const headerConfig = {
-    'headers': { 'Content-Encoding': 'gzip' },
-    'proxy': { 'host': '177.206.187.171', 'port': '8080' }
-};
-*/
+// Funcoes publicas com request/response
 
 const headerConfig = {
     'headers': { 'Content-Encoding': 'gzip' }
@@ -48,6 +28,7 @@ const headerConfig = {
 
 exports.get_pesquisas = async (req, res) => {
     try {
+        /*
         console.log('iniciando request');
         const req = await Axios.get(`${ENDPOINT}/agregados`, headerConfig);
         const pesquisas = new Array();
@@ -59,11 +40,13 @@ exports.get_pesquisas = async (req, res) => {
         console.log('finalizou loop');
         await Promise.all(loop);
         console.log('resolveu promisse');
+        */
+        let pesquisas = await getPesquisas();
         res.status(200).send(pesquisas);
 
     } catch (error) {
         console.log(error);
-        res.status(500).send({ code: 500, message: error.Error });
+        res.status(500).send('Erro ao processar API IBGE, contate o desenvolvedor da API');
     }
 };
 
@@ -80,19 +63,40 @@ exports.get_pesquisa = async function (req, res) {
     pesquisaCompleta.metadados = await getMetadados(idPesquisa);
     pesquisaCompleta.variaveis = await getDadosPesquisaNivelEstadual(idPesquisa);
 
-    res.status(200).send(pesquisaCompleta);
-    /*
-    if (pesquisaCompleta.metadados.erro == true && pesquisaCompleta.variaveis.erro == true) {
-        res.status(500).send({ code: 500, message: `Erro ao processar API IBGE` });
-    } else {
-        res.status(200).send(pesquisaCompleta);
+    if (pesquisaCompleta.metadados.erro || pesquisaCompleta.variaveis.erro) {
+        res.status(500).send('Erro ao processar API IBGE, contate o desenvolvedor da API');
     }
-    */
+
+    res.status(200).send(pesquisaCompleta);
 };
+
+
+// Funcoes publicas sem request/response
+
+exports.get_lista_pesquisas_base_ibge = getPesquisas;
+
+
+// Funcoes privadas
+
+async function getPesquisas() {
+    try {
+        console.log('iniciando request de pesquisas API IBGE');
+        const req = await Axios.get(`${ENDPOINT}/agregados`, headerConfig);
+        const pesquisas = new Array();
+        const loop = await req.data.map(async (agregado) => {
+            pesquisas.push(...agregado.agregados);
+        });
+        await Promise.all(loop);
+        return pesquisas;
+    } catch (error) {
+        console.log(error);
+        return ({ erro: true, mensagem: error });
+    }
+}
 
 async function getMetadados(idPesquisa) {
     try {
-        console.log('iniciando request de metadados');
+        console.log('iniciando request de metadados API IBGE');
         const response = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/metadados`, headerConfig);
         delete response.data['nivelTerritorial'];
         delete response.data['variaveis'];
@@ -102,13 +106,13 @@ async function getMetadados(idPesquisa) {
 
     } catch (error) {
         console.log(error);
-        return (error);
+        return ({ erro: true, mensagem: error });
     }
 }
 
 async function getDadosPesquisaNivelEstadual(idPesquisa) {
     try {
-        console.log('iniciando request de pesquisas');
+        console.log('iniciando request de variaveis estaduais API IBGE');
         const response = await Axios.get(`${ENDPOINT}/agregados/${idPesquisa}/variaveis?localidades=N3`, headerConfig);
         let tmp = response.data.map(variavel => {
             let x = {};
@@ -127,6 +131,6 @@ async function getDadosPesquisaNivelEstadual(idPesquisa) {
 
     } catch (error) {
         console.log(error);
-        return (error);
+        return ({ erro: true, mensagem: error });
     }
 }

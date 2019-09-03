@@ -6,4 +6,6 @@ module.exports = function (app) {
         .get(deputados.get_deputados);
     app.route('/deputado/:idDeputado/:idLegislatura')
         .get(deputados.get_deputado);
+    app.route('/deputado/pesquisasPorDiscursos/:idDeputado/:idLegislatura')
+        .get(deputados.get_pesquisas_por_discursos);
 };

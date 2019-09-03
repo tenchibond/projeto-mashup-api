@@ -14,10 +14,8 @@
       "url": "http://opensource.org/licenses/MIT"
     }
   },
-  "schemes": [
-    "http"
-  ],
-  
+  "schemes": ["http"],
+
   "paths": {
     "/listarDeputados/{UF}": {
       "get": {
@@ -195,6 +193,62 @@
                 },
                 "dados": {
                   "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deputado/pesquisasPorDiscursos/{idDeputado}/{idLegislatura}": {
+      "get": {
+        "summary": "Retorna uma lista de palavras-chave e pesquisas relacionadas",
+        "description": "Retorna uma lista de palavras-chave, obtidas através do processamento dos discursos do deputado, bem como a lista de pesquisas do IBGE que possuam, em seu título, alguma das palavraa-chave obtidas",
+        "parameters": [
+          {
+            "name": "idDeputado",
+            "in": "path",
+            "required": true,
+            "description": "ID do Deputado fornecida pela API",
+            "type": "number"
+          },
+          {
+            "name": "idLegislatura",
+            "in": "path",
+            "required": true,
+            "description": "ID da Legislatura do Deputado, fornecida pela API",
+            "type": "number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "discursos": {
+                  "type": "object",
+                  "properties": {
+                    "lstKeywords": {
+                      "type": "object"
+                    },
+                    "rankingKeywords": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "pesquisas": {
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "type": "number"
+                      },
+                      "nome": {
+                        "type": "string"
+                      }
+                    }
+                  }
                 }
               }
             }

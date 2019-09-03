@@ -5,6 +5,10 @@ var Axios = require('axios');
 
 const ENDPOINT = 'https://servicodados.ibge.gov.br/api/v3';
 
+const headerConfig = {
+    'headers': { 'Content-Encoding': 'gzip' }
+};
+
 /**
  * Lista de endpoints do Ibge
  * 1 - Endpoint Agregados:
@@ -21,10 +25,6 @@ const ENDPOINT = 'https://servicodados.ibge.gov.br/api/v3';
 */
 
 // Funcoes publicas com request/response
-
-const headerConfig = {
-    'headers': { 'Content-Encoding': 'gzip' }
-};
 
 exports.get_pesquisas = async (req, res) => {
     try {

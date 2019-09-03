@@ -1,6 +1,5 @@
 'use strict';
 
-var Request = require("request");
 var Axios = require('axios');
 
 var pesquisaController = require('./pesquisasController.js');
@@ -83,29 +82,16 @@ exports.get_pesquisas_por_discursos = async function (req, res) {
     let tmpPesquisasCompleto = await pesquisaController.get_lista_pesquisas_base_ibge();
     const tmpPesquisasResponse = new Array();
 
-    /*
-        console.log('iniciando request');
-        const req = await Axios.get(`${ENDPOINT}/agregados`, headerConfig);
-        const pesquisas = new Array();
-        console.log('iniciando loop');
-        const loop = await req.data.map(async (agregado) => {
-            pesquisas.push(...agregado.agregados);
-            //console.log(`inseriu loop`);
-        });
-        console.log('finalizou loop');
-        await Promise.all(loop);
-        console.log('resolveu promisse');
-        */
-
+    // verificando se existe, dentro do nome de cada pesquisa, algumas
+    // das palavras chave obtidas pelos discursos do deputado
     try {
         if (response.discursos !== {} && response.discursos.lstKeywords != null) {
-            console.log('aqui');
+            console.log('processando lista de pesquisas e palavras chave');
             const loop = await tmpPesquisasCompleto.map(async (pesquisa) => {
                 let tmpNomePesquisa = pesquisa.nome.toUpperCase();
                 response.discursos.lstKeywords.forEach(k => {
                     if (tmpNomePesquisa.includes(k)) {
-                        // console.log(pesquisa);
-                        tmpPesquisasCompleto.push(pesquisa);
+                        tmpPesquisasResponse.push(pesquisa);
                     }
                 });
             });

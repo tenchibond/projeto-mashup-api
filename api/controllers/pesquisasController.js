@@ -46,7 +46,7 @@ exports.get_pesquisas = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        res.status(500).send('Erro ao processar API IBGE, contate o desenvolvedor da API');
+        res.status(500).send('Erro ao processar API IBGE: erro ao processar a lista de pesquisas');
     }
 };
 
@@ -57,14 +57,14 @@ exports.get_pesquisa = async function (req, res) {
     let pesquisaCompleta = {};
 
     if (idPesquisa == null) {
-        res.status(500).send('Necessario informar um idPesquisa');
+        res.status(500).send('Erro ao processar API IBGE: necessario informar um idPesquisa');
     }
 
     pesquisaCompleta.metadados = await getMetadados(idPesquisa);
     pesquisaCompleta.variaveis = await getDadosPesquisaNivelEstadual(idPesquisa);
 
     if (pesquisaCompleta.metadados.erro || pesquisaCompleta.variaveis.erro) {
-        res.status(500).send('Erro ao processar API IBGE, contate o desenvolvedor da API');
+        res.status(500).send('Erro ao processar API IBGE: erro ao processar dados da pesquisa');
     }
 
     res.status(200).send(pesquisaCompleta);
@@ -73,7 +73,7 @@ exports.get_pesquisa = async function (req, res) {
 
 // Funcoes publicas sem request/response
 
-exports.get_lista_pesquisas_base_ibge = getPesquisas;
+exports.getListaPesquisasBaseIbge = getPesquisas;
 
 
 // Funcoes privadas
@@ -90,7 +90,7 @@ async function getPesquisas() {
         return pesquisas;
     } catch (error) {
         console.log(error);
-        return ({ erro: true, mensagem: error });
+        return ({ erro: true, mensagem: 'erro ao processar lista de pesquisas' });
     }
 }
 
@@ -106,7 +106,7 @@ async function getMetadados(idPesquisa) {
 
     } catch (error) {
         console.log(error);
-        return ({ erro: true, mensagem: error });
+        return ({ erro: true, mensagem: 'erro ao processar metadados da pesquisa' });
     }
 }
 
@@ -131,6 +131,6 @@ async function getDadosPesquisaNivelEstadual(idPesquisa) {
 
     } catch (error) {
         console.log(error);
-        return ({ erro: true, mensagem: error });
+        return ({ erro: true, mensagem: 'erro ao processar variaveis da pesquisa' });
     }
 }

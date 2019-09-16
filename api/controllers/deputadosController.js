@@ -34,27 +34,36 @@ const handle_axios_error = function (err) {
 Axios.interceptors.response.use(r => r, handle_axios_error);
 */
 
-exports.get_deputados = function (req, res) {
-    let uf = req.params.uf;
+exports.get_deputados = async function (req, res) {
+    let uf = req.query.UF;
+    let endereco = `${ENDPOINT}/deputados`;
 
-    Axios.get(`${ENDPOINT}/deputados?siglaUf=${uf}&ordem=ASC&ordenarPor=nome`)
-        .then(response => {
-            if (response.status == 200) {
-                let tmp = response.data.dados;
-                tmp.forEach(e => {
-                    delete e['uri'];
-                    delete e['uriPartido'];
-                    //e.link = `${ipServidor}/deputado/${e.id}/${e.idLegislatura}`; 
-                });
-                res.status(200).send(tmp);
-            } else {
-                res.status(500).send({ mensagem: 'Erro na API Camara' });
-            }
-        })
-        .catch(e => {
-            console.dir(`get_deputados | ${e.code} - ${e.message}`);
-            res.status(500).send({ code: e.code, message: 'Erro ao processar API Camara: lista dos deputados' });
-        });
+    try {
+        let response = null;
+        if (uf != null) {
+            console.log(uf);
+            response = await Axios.get(`${ENDPOINT}/deputados?siglaUf=${uf}&ordem=ASC&ordenarPor=nome`);
+        } else {
+            console.log('sem UF');
+            response = await Axios.get(`${ENDPOINT}/deputados`);
+        }
+
+        if (response.status == 200) {
+            const deputados = new Array();
+            const loop = await response.data.dados.map(async (deputado) => {
+                delete deputado['uri'];
+                delete deputado['uriPartido'];
+                deputados.push(deputado);
+            });
+            await Promise.all(loop);
+            res.status(200).send(deputados);
+        } else {
+            res.status(response.status).send();
+        }
+    } catch (error) {
+        console.dir(error);
+        res.status(500).send({ mensagem: 'Erro na API Camara: erro ao processar a lista de deputados' });
+    }
 };
 
 exports.get_deputado = async function (req, res) {
@@ -66,7 +75,7 @@ exports.get_deputado = async function (req, res) {
     deputadoDetalhado.dados = await getDeputadoDiscursos(idDeputado, idLegislatura);
 
     if (deputadoDetalhado.erro || deputadoDetalhado.dados.erro) {
-        res.status(500).send('Erro ao processar API Camara, contate o desenvolvedor da API');
+        res.status(500).send('Erro ao processar API Camara: erro ao processar os dados do deputado');
     }
 
     res.status(200).send(deputadoDetalhado);
@@ -79,7 +88,7 @@ exports.get_pesquisas_por_discursos = async function (req, res) {
     let response = {};
     response.discursos = await getDeputadoDiscursos(idDeputado, idLegislatura);
 
-    let tmpPesquisasCompleto = await pesquisaController.get_lista_pesquisas_base_ibge();
+    let tmpPesquisasCompleto = await pesquisaController.getListaPesquisasBaseIbge();
     const tmpPesquisasResponse = new Array();
 
     // verificando se existe, dentro do nome de cada pesquisa, algumas

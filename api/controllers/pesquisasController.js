@@ -28,22 +28,8 @@ const headerConfig = {
 
 exports.get_pesquisas = async (req, res) => {
     try {
-        /*
-        console.log('iniciando request');
-        const req = await Axios.get(`${ENDPOINT}/agregados`, headerConfig);
-        const pesquisas = new Array();
-        console.log('iniciando loop');
-        const loop = await req.data.map(async (agregado) => {
-            pesquisas.push(...agregado.agregados);
-            //console.log(`inseriu loop`);
-        });
-        console.log('finalizou loop');
-        await Promise.all(loop);
-        console.log('resolveu promisse');
-        */
         let pesquisas = await getPesquisas();
         res.status(200).send(pesquisas);
-
     } catch (error) {
         console.log(error);
         res.status(500).send('Erro ao processar API IBGE: erro ao processar a lista de pesquisas');
@@ -53,7 +39,6 @@ exports.get_pesquisas = async (req, res) => {
 
 exports.get_pesquisa = async function (req, res) {
     let idPesquisa = req.params.idPesquisa;
-
     let pesquisaCompleta = {};
 
     if (idPesquisa == null) {
@@ -66,7 +51,6 @@ exports.get_pesquisa = async function (req, res) {
     if (pesquisaCompleta.metadados.erro || pesquisaCompleta.variaveis.erro) {
         res.status(500).send('Erro ao processar API IBGE: erro ao processar dados da pesquisa');
     }
-
     res.status(200).send(pesquisaCompleta);
 };
 

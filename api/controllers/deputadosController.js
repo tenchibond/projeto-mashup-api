@@ -36,15 +36,12 @@ Axios.interceptors.response.use(r => r, handle_axios_error);
 
 exports.get_deputados = async function (req, res) {
     let uf = req.query.UF;
-    let endereco = `${ENDPOINT}/deputados`;
 
     try {
         let response = null;
         if (uf != null) {
-            console.log(uf);
             response = await Axios.get(`${ENDPOINT}/deputados?siglaUf=${uf}&ordem=ASC&ordenarPor=nome`);
         } else {
-            console.log('sem UF');
             response = await Axios.get(`${ENDPOINT}/deputados`);
         }
 
@@ -77,7 +74,6 @@ exports.get_deputado = async function (req, res) {
     if (deputadoDetalhado.erro || deputadoDetalhado.dados.erro) {
         res.status(500).send('Erro ao processar API Camara: erro ao processar os dados do deputado');
     }
-
     res.status(200).send(deputadoDetalhado);
 };
 
@@ -111,7 +107,6 @@ exports.get_pesquisas_por_discursos = async function (req, res) {
     }
 
     response.pesquisas = tmpPesquisasResponse;
-
     res.status(200).send(response);
 }
 

@@ -1,8 +1,8 @@
 'use strict';
 
 var Axios = require('axios');
-
 var pesquisaController = require('./pesquisasController.js');
+var Utils = require('../utils/utils.js');
 
 const ENDPOINT = 'https://dadosabertos.camara.leg.br/api/v2';
 
@@ -36,6 +36,7 @@ Axios.interceptors.response.use(r => r, handle_axios_error);
 
 exports.get_deputados = async function (req, res) {
     let uf = req.query.UF;
+    let plain = req.query.PLAIN;
 
     try {
         let response = null;
@@ -53,7 +54,14 @@ exports.get_deputados = async function (req, res) {
                 deputados.push(deputado);
             });
             await Promise.all(loop);
-            res.status(200).send(deputados);
+            
+            if(plain != null) {
+                //console.log(await Utils.async_plain_lista_deputados(response.data.dados));
+                //res.status(200).send(await Utils.async_converter_array_em_objeto(response.data.dados, "id"));
+                res.status(200).send(await Utils.async_plain_lista_deputados(response.data.dados));
+            } else {
+                res.status(200).send(deputados);
+            }
         } else {
             res.status(response.status).send();
         }
@@ -112,51 +120,51 @@ exports.get_pesquisas_por_discursos = async function (req, res) {
 
 async function getDeputadoDetalhado(idDeputado) {
     console.log('iniciando request de deputados API Camara');
-    const data = await Axios.get(`${ENDPOINT}/deputados/${idDeputado}`)
-        .then(response => {
-            return response.data.dados;
-        })
-        .catch(e => {
-            console.dir(e);
-            return ({ erro: true, mensagem: e });
-        });
-    return data;
+    try {
+        const response = await Axios.get(`${ENDPOINT}/deputados/${idDeputado}`);
+        return response.data.dados;
+
+    } catch (error) {
+        console.log(error);
+        return ({ erro: true, mensagem: 'erro ao processar o detalhamento do deputado' });
+    }
 }
 
 async function getDeputadoDiscursos(idDeputado, idLegislatura) {
     console.log('iniciando request de discursos API Camara');
-    const data = await Axios.get(`${ENDPOINT}/deputados/${idDeputado}/discursos?idLegislatura=${idLegislatura}&ordenarPor=dataHoraInicio&ordem=ASC`)
-        .then(response => {
-            if (response.data.dados == null || response.data.dados.length == 0) {
-                return {};
+    try {
+        const response = await Axios.get(`${ENDPOINT}/deputados/${idDeputado}/discursos?idLegislatura=${idLegislatura}&ordenarPor=dataHoraInicio&ordem=ASC`);
+        if (response.data.dados == null || response.data.dados.length == 0) {
+            return {};
+        }
+
+        let dados = {};
+
+        //Criando lista de palavras chave temporarias
+        let tmpKeywords = [];
+        response.data.dados.forEach(d => {
+            if (d.keywords != null) {
+                const re = /\s*,\s*/;
+                tmpKeywords.push(d.keywords.split(re));
             }
-
-            let dados = {};
-
-            //Criando lista de palavras chave temporarias
-            let tmpKeywords = [];
-            response.data.dados.forEach(d => {
-                if (d.keywords != null) {
-                    const re = /\s*,\s*/;
-                    tmpKeywords.push(d.keywords.split(re));
-                }
-            });
-
-            if (tmpKeywords.length > 0) {
-                //gerando lista de palavras chave de discursos
-                dados.lstKeywords = tmpKeywords.reduce((acc, it) => [...acc, ...it]);
-
-                //gerando ranking de palavras chave de discursos
-                dados.rankingKeywords = dados.lstKeywords.reduce((acc, it) => {
-                    acc[it] = acc[it] + 1 || 1;
-                    return acc;
-                }, {});
-            }
-            return dados;
-        })
-        .catch(e => {
-            console.dir(e);
-            return ({ erro: true, mensagem: e });
         });
-    return data;
+
+        if (tmpKeywords.length > 0) {
+            //gerando lista de palavras chave de discursos
+            dados.lstKeywords = tmpKeywords.reduce((acc, it) => [...acc, ...it]);
+
+            //gerando ranking de palavras chave de discursos
+            /* metodo antigo
+            dados.rankingKeywords = dados.lstKeywords.reduce((acc, it) => {
+                acc[it] = acc[it] + 1 || 1;
+                return acc;
+            }, {});
+            */
+            dados.rankingKeywords = await Utils.async_reduce_lista_keywords(dados.lstKeywords);
+        }
+        return dados;
+    } catch (error) {
+        console.log(error);
+        return ({ erro: true, mensagem: 'erro ao processar os discursos do deputado' });
+    }
 }

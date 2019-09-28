@@ -17,7 +17,7 @@
   "schemes": ["http"],
 
   "paths": {
-    "/listarDeputados/": {
+    "/listarDeputados": {
       "get": {
         "summary": "Retorna a lista de deputados, por UF fornecida",
         "description": "Retorna a lista de deputados, por UF fornecida. Caso não seja informado nenhuma UF, retornará a lista de todos os deputados federais em exercício no momento da solicitação.",
@@ -26,6 +26,12 @@
             "name": "UF",
             "in": "query",
             "description": "Sigla da UF a ser pesquisada",
+            "type": "string"
+          },
+          {
+            "name": "PLAIN",
+            "in": "query",
+            "description": "Usar S para a lista de deputados vir no formato idDeputado: nomeDeputado (chave-valor)",
             "type": "string"
           }
         ],

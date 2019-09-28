@@ -16,6 +16,11 @@ Para instalar e utilizar a API, você precisará ter o NodeJS, na versão >= 10.
 3. Após instalar, para executar: *npm start* ou *nodemon .\server.js*
 
 ## Dados da versão
+#### Versão 0.0.3
+Alterados os seguintes itens
+- Inserido opção de lista simplificada de deputados por unidade federativa
+- Em Detalhar deputado, inserida nova formatação do retorno das palavras-chave
+
 #### Versão 0.0.2
 Versão inicial da API, contendo recursos
 - Listar deputados por unidade federativa

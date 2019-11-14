@@ -4,11 +4,15 @@ var express = require('express'),
     bodyParser = require('body-parser');
     swaggerUi = require('swagger-ui-express');
     swaggerDocument = require('./swagger.json');
+    cors = require('cors');
 
 const rateLimit = require('express-rate-limit');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+//configurando cors
+app.use(cors());
 
 //configuracao do limitador de requisicoes
 const functionOnLimitReached = function (req, res, options) {
